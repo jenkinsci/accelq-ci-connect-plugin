@@ -1,2 +1,4 @@
 target/*
 work/*
+.idea/*
+aq-jenkins-connect.iml
