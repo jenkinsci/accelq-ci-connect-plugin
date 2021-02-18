@@ -44,6 +44,9 @@
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
+    <repository>
+      <id>aq.core</id>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
@@ -68,9 +71,7 @@
     <dependency>
       <groupId>core</groupId>
       <artifactId>aqCore</artifactId>
-<!--      <scope>system</scope>-->
       <version>1.0</version>
-<!--      <systemPath>${pom.basedir}/src/lib/core-1.0-SNAPSHOT.jar</systemPath>-->
     </dependency>
   </dependencies>
 </project>

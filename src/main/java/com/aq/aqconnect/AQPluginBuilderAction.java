@@ -3,7 +3,9 @@ package com.aq.aqconnect;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.*;
+import hudson.util.Secret;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -27,7 +29,7 @@ import java.util.regex.Pattern;
 public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
 
     private String jobId;
-    private String apiKey;
+    private Secret apiKey;
     private String projectCode;
     private String appURL;
     private String userName;
@@ -38,7 +40,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     private String proxyPort;
 
     @DataBoundConstructor
-    public AQPluginBuilderAction(String jobId, String apiKey, String projectCode, String appURL, String runParamStr,
+    public AQPluginBuilderAction(String jobId, Secret apiKey, String projectCode, String appURL, String runParamStr,
             String tenantCode, String userName, String proxyHost, String proxyPort) {
         this.jobId = jobId;
         this.apiKey = apiKey;
@@ -51,7 +53,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         this.proxyHost = proxyHost;
     }
 
-    public String getApiKey() {
+    public Secret getApiKey() {
         return apiKey;
     }
     public String getUserName() {
@@ -112,7 +114,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println("******************************************");
             out.println();
             String runParamJsonPayload = aqUtils.getRunParamJsonPayload(this.runParamStr);
-            JSONObject realJobObj = aqRestClient.triggerJob(this.apiKey, this.userName, this.jobId, runParamJsonPayload);
+            JSONObject realJobObj = aqRestClient.triggerJob(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload);
 
             if (realJobObj == null) {
                 throw new AQException("Unable to submit the Job, check plugin log stack");
@@ -126,7 +128,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             int attempt = 0;
             String resultAccessURL = aqRestClient.getResultExternalAccessURL(Long.toString(realJobPid), this.tenantCode, this.projectCode);
             do {
-                summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey, this.userName);
+                summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
                 if (summaryObj.get("cause") != null) {
                     throw new AQException((String) summaryObj.get("cause"));
                 }
@@ -188,7 +190,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println();
         } catch (InterruptedException e) {
             out.println("CATCHED ABORT ERROR");
-            summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey, this.userName);
+            summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
             if (summaryObj.get("cause") != null) {
                 throw new AQException((String) summaryObj.get("cause"));
             }
@@ -226,25 +228,44 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                                                @AncestorInPath Job job) throws IOException, ServletException {
             // basic form validate
             AQFormValidate formValidate = new AQFormValidate();
+            String emptyError = "Cannot be empty";
+            if (Util.fixEmptyAndTrim(appURL) == null) {
+                return FormValidation.error("ACCELQ App URL: " + emptyError);
+            }
             String res = formValidate.validateAppURL(appURL);
             if (res != null) {
                 return FormValidation.error("ACCELQ App URL: " + res);
+            }
+            if (Util.fixEmptyAndTrim(userName) == null) {
+                return FormValidation.error("ACCELQ User ID: " + emptyError);
             }
             res = formValidate.validateUserId(userName);
             if (res != null) {
                 return FormValidation.error("ACCELQ User ID: " + res);
             }
+            if (Util.fixEmptyAndTrim(apiKey) == null) {
+                return FormValidation.error("API Key: " + emptyError);
+            }
             res = formValidate.validateAPIKey(apiKey);
             if (res != null) {
                 return FormValidation.error("API Key: " + res);
+            }
+            if (Util.fixEmptyAndTrim(appURL) == null) {
+                return FormValidation.error("Project Code: " + emptyError);
             }
             res = formValidate.validateProjectCode(projectCode);
             if (res != null) {
                 return FormValidation.error("Project Code: " + res);
             }
+            if (Util.fixEmptyAndTrim(appURL) == null) {
+                return FormValidation.error("Tenant Code: " + emptyError);
+            }
             res = formValidate.validateTenantCode(tenantCode);
             if (res != null) {
                 return FormValidation.error("Tenant Code: " + res);
+            }
+            if (Util.fixEmptyAndTrim(appURL) == null) {
+                return FormValidation.error("ACCELQ CI Job ID: " + emptyError);
             }
             res = formValidate.validateJobID(jobId);
             if (res != null) {
