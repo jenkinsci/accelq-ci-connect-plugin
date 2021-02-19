@@ -28,7 +28,7 @@
     <f:entry title="Proxy Port (optional)" field="proxyPort">
         <f:textbox />
     </f:entry>
-    <f:validateButton
+    <f:validateButton checkMethod="post"
     title="Test Connection" progress="Testing..."
     method="testConnection" with="appURL,apiKey,projectCode,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort"/>
 </j:jelly>
