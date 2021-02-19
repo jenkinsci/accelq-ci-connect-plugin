@@ -1,0 +1,62 @@
+package aqPluginCore;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import java.util.Date;
+
+
+public class AQUtils {
+    public String getRunParamJsonPayload(String runParamStr) {
+        if(runParamStr == null || runParamStr.trim().length() == 0)
+            return null;
+        JSONObject json = new JSONObject();
+        String[] splitOnAmp = runParamStr.split("&");
+        for(String split: splitOnAmp) {
+            String[] splitOnEquals = split.split("=");
+            if(splitOnEquals.length == 2) {
+                String key = splitOnEquals[0].trim(), value = splitOnEquals[1].trim();
+                if(!key.equals("") && !value.equals("")) {
+                    json.put(key, value);
+                }
+            }
+        }
+        return json.toJSONString();
+    }
+    public String getFormattedTime(long a, long b) {
+        Date startDate = new Date(a);
+        Date endDate = new Date(b);
+        long difference_In_Time
+            = endDate.getTime() - startDate.getTime();
+        long difference_In_Seconds
+            = (difference_In_Time
+            / 1000)
+            % 60;
+        long difference_In_Minutes
+            = (difference_In_Time
+            / (1000 * 60))
+            % 60;
+        long difference_In_Hours
+            = (difference_In_Time
+            / (1000 * 60 * 60))
+            % 24;
+        long difference_In_Days
+            = (difference_In_Time
+            / (1000 * 60 * 60 * 24))
+            % 365;
+        String res = "";
+        if (difference_In_Days != Long.valueOf(0)) {
+            res += (difference_In_Days > Long.valueOf(1) ? (difference_In_Days + " days") : (difference_In_Days + " day"));
+        }
+        if (difference_In_Hours != Long.valueOf(0)) {
+            res += (difference_In_Hours > Long.valueOf(1) ? (difference_In_Hours + " hrs") : (difference_In_Hours + " hr"));
+        }
+        if (difference_In_Minutes != Long.valueOf(0)) {
+            res += " " + (difference_In_Minutes > Long.valueOf(1) ? (difference_In_Minutes + " mins") : (difference_In_Minutes + " min"));
+        }
+        if (difference_In_Seconds != Long.valueOf(0)) {
+            res += " " + (difference_In_Seconds > Long.valueOf(1) ? (difference_In_Seconds + " seconds") : (difference_In_Seconds + " second"));
+        }
+        return res;
+    }
+}
