@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import aqPluginCore.*;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -216,6 +217,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             load();
         }
         
+        @POST
         public FormValidation doTestConnection(@QueryParameter("appURL") final String appURL,
                                                @QueryParameter("apiKey") final String apiKey,
                                                @QueryParameter("projectCode") final String projectCode,
