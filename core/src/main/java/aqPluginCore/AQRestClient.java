@@ -9,6 +9,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -45,6 +46,8 @@ public class AQRestClient {
 
     private static int PROXY_PORT = 80;
     private static String PROXY_HOST;
+    private static Boolean ENABLE_SSL_CHECKS = false;
+
 
     public static AQRestClient getInstance() {
         return aqRESTClient;
@@ -69,16 +72,23 @@ public class AQRestClient {
 
     private CloseableHttpClient getHttpsClient() {
         try {
-            SSLContext sslContext = new SSLContextBuilder()
+            HttpClientBuilder hcb = null;
+            if (!ENABLE_SSL_CHECKS) {
+                SSLContext sslContext = new SSLContextBuilder()
                     .loadTrustMaterial(null, new TrustStrategy() {
-                        @Override
-                        public boolean isTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-                            return true;
-                        }
-                    }).build();
-            HttpClientBuilder hcb = HttpClients.custom()
+                    @Override
+                    public boolean isTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                        return true;
+                    }
+                }).build();
+                hcb = HttpClients.custom()
                     .setSSLContext(sslContext)
                     .setSSLHostnameVerifier(new NoopHostnameVerifier());
+            } else {
+                hcb = HttpClients.custom()
+                    .setSSLContext(SSLContext.getDefault())
+                    .setSSLHostnameVerifier(new DefaultHostnameVerifier());
+            }
             if (PROXY_HOST != null && !PROXY_HOST.equals("")) {
                 HttpHost hh = new HttpHost(PROXY_HOST, PROXY_PORT);
                 hcb.setProxy(hh);
@@ -226,5 +236,9 @@ public class AQRestClient {
     public void setUpProxy(String proxyHost, int proxyPort) {
         PROXY_HOST = proxyHost;
         PROXY_PORT = proxyPort == 0 ? 80 : proxyPort;
+    }
+
+    public void setEnableSSLChecks(Boolean check) {
+        ENABLE_SSL_CHECKS = check || false;
     }
 }
