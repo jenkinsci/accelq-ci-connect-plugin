@@ -39,11 +39,11 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     private String runParamStr;
     private String proxyHost;
     private String proxyPort;
-    private Boolean enableSSLCheck;
+    private Boolean disableSSLCheck;
 
     @DataBoundConstructor
     public AQPluginBuilderAction(String jobId, Secret apiKey, String projectCode, String appURL, String runParamStr,
-            String tenantCode, String userName, String proxyHost, String proxyPort, Boolean enableSSLCheck) {
+            String tenantCode, String userName, String proxyHost, String proxyPort, Boolean disableSSLCheck) {
         this.jobId = jobId;
         this.apiKey = apiKey;
         this.projectCode = projectCode;
@@ -53,7 +53,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         this.userName = userName;
         this.proxyPort = proxyPort;
         this.proxyHost = proxyHost;
-        this.enableSSLCheck = enableSSLCheck || false;
+        this.disableSSLCheck = disableSSLCheck || false;
     }
 
     public Secret getApiKey() {
@@ -90,8 +90,8 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     public String getTenantCode() {
         return tenantCode;
     }
-    public String getSSLChecks() {
-        return enableSSLCheck;
+    public Boolean getSSLChecks() {
+        return disableSSLCheck;
     }
 
     @Override
@@ -110,7 +110,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             aqRestClient = AQRestClient.getInstance();
             AQUtils aqUtils = new AQUtils();
             aqRestClient.setUpBaseURL(this.appURL, this.tenantCode, this.projectCode);
-            aqRestClient.setEnableSSLChecks(this.enableSSLCheck);
+            aqRestClient.disableSSLChecks(this.disableSSLCheck);
             if (this.proxyHost != null && this.proxyPort != null && this.proxyHost.length() > 0 && this.proxyPort.length() > 0) {
                 aqRestClient.setUpProxy(this.proxyHost.trim(), Integer.parseInt(this.proxyPort.trim()));
             } else {
@@ -233,7 +233,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                                                @QueryParameter("runParamStr") final String runParamStr,
                                                @QueryParameter("proxyHost") final String proxyHost,
                                                @QueryParameter("proxyPort") final String proxyPort,
-                                               @QueryParameter("enableSSLCheck") final Boolean enableSSLCheck,
+                                               @QueryParameter("disableSSLCheck") final Boolean disableSSLCheck,
                                                @AncestorInPath Job job) throws IOException, ServletException {
 
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
@@ -289,7 +289,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 aqRestClient = AQRestClient.getInstance();
                 String payload = aqUtils.getRunParamJsonPayload(runParamStr);
                 aqRestClient.setUpBaseURL(appURL, tenantCode, projectCode);
-                aqRestClient.setEnableSSLChecks(enableSSLCheck);
+                aqRestClient.disableSSLChecks(disableSSLCheck);
                 res = aqRestClient.testConnection(apiKey, userName, jobId, payload);
                 if (res == null) {
                     return FormValidation.error("Connection Error: Something in plugin went wrong");

@@ -46,7 +46,7 @@ public class AQRestClient {
 
     private static int PROXY_PORT = 80;
     private static String PROXY_HOST;
-    private static Boolean ENABLE_SSL_CHECKS = false;
+    private static Boolean DISABLE_SSL_CHECKS = false;
 
 
     public static AQRestClient getInstance() {
@@ -73,7 +73,7 @@ public class AQRestClient {
     private CloseableHttpClient getHttpsClient() {
         try {
             HttpClientBuilder hcb = null;
-            if (!ENABLE_SSL_CHECKS) {
+            if (DISABLE_SSL_CHECKS) {
                 SSLContext sslContext = new SSLContextBuilder()
                     .loadTrustMaterial(null, new TrustStrategy() {
                     @Override
@@ -238,7 +238,7 @@ public class AQRestClient {
         PROXY_PORT = proxyPort == 0 ? 80 : proxyPort;
     }
 
-    public void setEnableSSLChecks(Boolean check) {
-        ENABLE_SSL_CHECKS = check || false;
+    public void disableSSLChecks(Boolean check) {
+        DISABLE_SSL_CHECKS = check || false;
     }
 }

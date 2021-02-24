@@ -28,10 +28,10 @@
     <f:entry title="Proxy Port (optional)" field="proxyPort">
         <f:textbox />
     </f:entry>
-    <f:entry title="Enable SSL Checks (optional)" field="enableSSLCheck">
+    <f:entry title="Disable SSL Checks (optional)" field="disableSSLCheck">
         <f:checkbox />
     </f:entry>
     <f:validateButton
     title="Test Connection" progress="Testing..."
-    method="testConnection" with="appURL,apiKey,projectCode,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort"/>
+    method="testConnection" with="appURL,apiKey,projectCode,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort,disableSSLCheck"/>
 </j:jelly>
