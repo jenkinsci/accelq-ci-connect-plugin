@@ -23,7 +23,12 @@
   <name>ACCELQ CI-Connect Plugin</name>
   <description>ACCELQ Continuous Integration</description>
   <url>http://www.accelq.com</url>
-  
+  <scm>
+    <connection>https://github.com/jenkinsci/accelq-ci-connect-plugin.git</connection>
+    <developerConnection>https://github.com/jenkinsci/accelq-ci-connect-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/accelq-ci-connect-plugin</url>
+    <tag>accelq-ci-connect-1.0</tag>
+  </scm>
   
 
   <licenses>
