@@ -27,7 +27,6 @@
     <url>https://github.com/jenkinsci/accelq-ci-connect-plugin</url>
     <connection>https://github.com/jenkinsci/accelq-ci-connect-plugin.git</connection>
     <developerConnection>https://github.com/jenkinsci/accelq-ci-connect-plugin.git</developerConnection>
-    <tag>accelq-ci-connect-1.1</tag>
   </scm>
   
 
