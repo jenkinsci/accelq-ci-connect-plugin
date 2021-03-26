@@ -10,7 +10,7 @@
   </parent>
     <groupId>com.aq</groupId>
     <artifactId>accelq-ci-connect</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <properties>
@@ -27,7 +27,6 @@
     <url>https://github.com/jenkinsci/accelq-ci-connect-plugin</url>
     <connection>scm:git:https://github.com/jenkinsci/accelq-ci-connect-plugin.git</connection>
     <developerConnection>scm:git:https://github.com/jenkinsci/accelq-ci-connect-plugin.git</developerConnection>
-    <tag>accelq-ci-connect-1.2</tag>
   </scm>
   
 
