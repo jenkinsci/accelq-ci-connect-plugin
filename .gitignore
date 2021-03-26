@@ -4,7 +4,6 @@ work/*
 aq-jenkins-connect.iml
 release.properties
 core/target/*
-.gitignore
 core/.settings/org.eclipse.core.resources.prefs
 core/.settings/org.eclipse.jdt.core.prefs
 core/.settings/org.eclipse.jdt.apt.core.prefs
