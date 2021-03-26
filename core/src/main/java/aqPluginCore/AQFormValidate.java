@@ -39,18 +39,12 @@ public class AQFormValidate {
         }
         return null;
     } 
-    public String validateProjectCode(String value) {
-        return this.validateGenericField(value);
-    }
     public String validateAPIKey(String value) {
         return this.validateGenericField(value);
     }
     public String validateUserId(String value) {
         try {
-            String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\."+ 
-                            "[a-zA-Z0-9_+&*-]+)*@" + 
-                            "(?:[a-zA-Z0-9-]+\\.)+[a-z" + 
-                            "A-Z]{2,7}$";
+            String emailRegex = "^(([^<>()[\\]\\\\.,;:\\s@\\\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\\\"]+)*)|(\\\".+\\\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
             Pattern pat = Pattern.compile(emailRegex); 
             if (value == null || value.length() == 0) return "Cannot be empty";
             else if (!pat.matcher(value).matches()) return "User ID must be in email format";

@@ -2,3 +2,15 @@ target/*
 work/*
 .idea/*
 aq-jenkins-connect.iml
+release.properties
+core/target/*
+.gitignore
+core/.settings/org.eclipse.core.resources.prefs
+core/.settings/org.eclipse.jdt.core.prefs
+core/.settings/org.eclipse.jdt.apt.core.prefs
+core/.settings/org.eclipse.m2e.core.prefs
+release.properties
+accelq-ci-connect (2).iml
+accelq-ci-connect (1).iml
+core/target/maven-archiver/pom.properties
+core/core.iml

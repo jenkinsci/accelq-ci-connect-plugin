@@ -8,7 +8,7 @@ public class AQConstants {
     public static final int JOB_PICKUP_RETRY_COUNT = 30;
 
     public static final String JOB_WEB_LINK = "#/forward?entityType=9&resultId=%s";
-    public static final String EXT_JOB_WEB_LINK = "#/resultext?tenant=%s&project=%s&resultId=%s";
+    public static final String EXT_JOB_WEB_LINK = "#/resultext?tenant=%s&resultId=%s";
 
 
     public static final String API_VERSION = "1.0";

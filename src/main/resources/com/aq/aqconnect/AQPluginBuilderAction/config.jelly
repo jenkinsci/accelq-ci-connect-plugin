@@ -10,9 +10,6 @@
     <f:entry title="API Key" field="apiKey">
         <f:textbox />
     </f:entry>
-    <f:entry title="Project Code" field="projectCode">
-        <f:textbox />
-    </f:entry>
     <f:entry title="Tenant Code" field="tenantCode">
         <f:textbox />
     </f:entry>
@@ -33,5 +30,5 @@
     </f:entry>
     <f:validateButton
     title="Test Connection" progress="Testing..."
-    method="testConnection" with="appURL,apiKey,projectCode,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort,disableSSLCheck"/>
+    method="testConnection" with="appURL,apiKey,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort,disableSSLCheck"/>
 </j:jelly>
