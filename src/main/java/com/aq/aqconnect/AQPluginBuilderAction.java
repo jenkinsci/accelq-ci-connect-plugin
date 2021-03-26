@@ -13,7 +13,6 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
-import org.json.simple.parser.ParseException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.json.simple.*;
@@ -196,7 +195,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println("*** Completed: ACCELQ Test Automation Step ***");
             out.println("**********************************************");
             out.println();
-        } catch (ParseException e) {
+        } catch (Exception e) {
             out.println(e);
         }
     }
