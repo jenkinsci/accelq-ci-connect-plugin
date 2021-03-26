@@ -28,7 +28,13 @@
     <connection>scm:git:https://github.com/jenkinsci/accelq-ci-connect-plugin.git</connection>
     <developerConnection>scm:git:https://github.com/jenkinsci/accelq-ci-connect-plugin.git</developerConnection>
   </scm>
-  
+  <developers>
+    <developer>
+        <id>accelq</id>
+        <name>accelq</name>
+        <email>info@accelq.com</email>
+      </developer>
+    </developers>
 
   <licenses>
     <license>
