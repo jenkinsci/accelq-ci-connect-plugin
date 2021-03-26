@@ -1,12 +1,22 @@
 package aqPluginCore;
-import org.json.simple.JSONArray;
+import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import java.util.Date;
 
 
 public class AQUtils {
+    public StringEntity getRunParam(String jobId, String runParam) throws ParseException {
+        JSONObject jsonObj = new JSONObject();
+        if(runParam != null && !runParam.equals("")) {
+            jsonObj.put("runProperties", (JSONObject) new JSONParser().parse(runParam));
+        }
+        jsonObj.put("jobPid", Integer.parseInt(jobId));
+        StringEntity requestEntity = new StringEntity(jsonObj.toJSONString(), org.apache.http.entity.ContentType.APPLICATION_JSON);
+        return requestEntity;
+    }
     public String getRunParamJsonPayload(String runParamStr) {
         if(runParamStr == null || runParamStr.trim().length() == 0)
             return null;

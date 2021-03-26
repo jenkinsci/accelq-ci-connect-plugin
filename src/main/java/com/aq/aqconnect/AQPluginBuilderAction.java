@@ -24,14 +24,11 @@ import aqPluginCore.*;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
 
-import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
 
     private String jobId;
     private Secret apiKey;
-    private String projectCode;
     private String appURL;
     private String userName;
     private String tenantCode;
@@ -42,11 +39,10 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     private Boolean disableSSLCheck;
 
     @DataBoundConstructor
-    public AQPluginBuilderAction(String jobId, Secret apiKey, String projectCode, String appURL, String runParamStr,
+    public AQPluginBuilderAction(String jobId, Secret apiKey, String appURL, String runParamStr,
             String tenantCode, String userName, String proxyHost, String proxyPort, Boolean disableSSLCheck) {
         this.jobId = jobId;
         this.apiKey = apiKey;
-        this.projectCode = projectCode;
         this.appURL = appURL;
         this.runParamStr = runParamStr;
         this.tenantCode = tenantCode;
@@ -65,10 +61,6 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
 
     public String getJobId() {
         return jobId;
-    }
-
-    public String getProjectCode() {
-        return projectCode;
     }
 
     public String getAppURL() {
@@ -109,7 +101,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         try {
             aqRestClient = AQRestClient.getInstance();
             AQUtils aqUtils = new AQUtils();
-            aqRestClient.setUpBaseURL(this.appURL, this.tenantCode, this.projectCode);
+            aqRestClient.setUpBaseURL(this.appURL, this.tenantCode);
             aqRestClient.disableSSLChecks(this.disableSSLCheck);
             if (this.proxyHost != null && this.proxyPort != null && this.proxyHost.length() > 0 && this.proxyPort.length() > 0) {
                 aqRestClient.setUpProxy(this.proxyHost.trim(), Integer.parseInt(this.proxyPort.trim()));
@@ -121,6 +113,14 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println("******************************************");
             out.println();
             String runParamJsonPayload = aqUtils.getRunParamJsonPayload(this.runParamStr);
+            // Test connection at runtime
+            String res = aqRestClient.testConnection(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload);
+            if (res == null) {
+                throw new AQException("Connection Error: Something in plugin went wrong");
+            } else if(res.length() > 0) {
+                throw new AQException("Connection Error: " + res);
+            }
+
             JSONObject realJobObj = aqRestClient.triggerJob(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload);
 
             if (realJobObj == null) {
@@ -133,7 +133,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             long passCount = 0, failCount = 0, runningCount = 0, totalCount = 0, notRunCount = 0;
             String jobStatus = "";
             int attempt = 0;
-            String resultAccessURL = aqRestClient.getResultExternalAccessURL(Long.toString(realJobPid), this.tenantCode, this.projectCode);
+            String resultAccessURL = aqRestClient.getResultExternalAccessURL(Long.toString(realJobPid), this.tenantCode);
             do {
                 summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
                 if (summaryObj.get("cause") != null) {
@@ -164,7 +164,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 }
                 jobStatus = ((String) summaryObj.get("status")).toUpperCase();
                 if (jobStatus.equals(AQConstants.TEST_JOB_STATUS.COMPLETED.getStatus().toUpperCase())) {
-                    String res = " " + aqUtils.getFormattedTime((Long)summaryObj.get("startTimestamp"), (Long)summaryObj.get("completedTimestamp"));
+                    res = " " + aqUtils.getFormattedTime((Long)summaryObj.get("startTimestamp"), (Long)summaryObj.get("completedTimestamp"));
                     out.println("Status: " + summaryObj.get("status").toString().toUpperCase() + " ("+res.trim()+")");
                 } else {
                     out.println("Status: " + summaryObj.get("status").toString().toUpperCase());
@@ -195,17 +195,6 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println("*** Completed: ACCELQ Test Automation Step ***");
             out.println("**********************************************");
             out.println();
-        } catch (InterruptedException e) {
-            out.println("CATCHED ABORT ERROR");
-            summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
-            if (summaryObj.get("cause") != null) {
-                throw new AQException((String) summaryObj.get("cause"));
-            }
-            if (summaryObj.get("summary") != null) {
-                summaryObj = (JSONObject) summaryObj.get("summary");
-            }
-            out.println("Status: " + summaryObj.get("status"));
-            out.println("Pass: " + (Long) summaryObj.get("pass"));
         } catch (Exception e) {
             out.println(e);
         }
@@ -226,7 +215,6 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         @POST
         public FormValidation doTestConnection(@QueryParameter("appURL") final String appURL,
                                                @QueryParameter("apiKey") final String apiKey,
-                                               @QueryParameter("projectCode") final String projectCode,
                                                @QueryParameter("jobId") final String jobId,
                                                @QueryParameter("userName") final String userName,
                                                @QueryParameter("tenantCode") final String tenantCode,
@@ -262,13 +250,6 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 return FormValidation.error("API Key: " + res);
             }
             if (Util.fixEmptyAndTrim(appURL) == null) {
-                return FormValidation.error("Project Code: " + emptyError);
-            }
-            res = formValidate.validateProjectCode(projectCode);
-            if (res != null) {
-                return FormValidation.error("Project Code: " + res);
-            }
-            if (Util.fixEmptyAndTrim(appURL) == null) {
                 return FormValidation.error("Tenant Code: " + emptyError);
             }
             res = formValidate.validateTenantCode(tenantCode);
@@ -288,7 +269,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 AQUtils aqUtils = new AQUtils();
                 aqRestClient = AQRestClient.getInstance();
                 String payload = aqUtils.getRunParamJsonPayload(runParamStr);
-                aqRestClient.setUpBaseURL(appURL, tenantCode, projectCode);
+                aqRestClient.setUpBaseURL(appURL, tenantCode);
                 aqRestClient.disableSSLChecks(disableSSLCheck);
                 res = aqRestClient.testConnection(apiKey, userName, jobId, payload);
                 if (res == null) {

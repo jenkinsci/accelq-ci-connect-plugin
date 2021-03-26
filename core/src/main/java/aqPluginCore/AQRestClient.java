@@ -1,21 +1,15 @@
 package aqPluginCore;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.json.simple.JSONArray;
@@ -27,12 +21,8 @@ import javax.net.ssl.SSLContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Array;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AQRestClient {
 
@@ -57,17 +47,17 @@ public class AQRestClient {
         return BASE_URL;
     }
 
-    public String getResultExternalAccessURL(String jobPid, String tenantCode, String projectCode) {
-        return String.format(getBaseURL() + AQConstants.EXT_JOB_WEB_LINK, tenantCode, projectCode, jobPid);
+    public String getResultExternalAccessURL(String jobPid, String tenantCode) {
+        return String.format(getBaseURL() + AQConstants.EXT_JOB_WEB_LINK, tenantCode, jobPid);
     }
 
     public String getAbortURL(String jobPid) {
         return String.format(getBaseURL() + AQConstants.JOB_WEB_LINK, jobPid);
     }
 
-    public void setUpBaseURL(String baseURL, String tenantCode, String projectCode) {
+    public void setUpBaseURL(String baseURL, String tenantCode) {
         BASE_URL = baseURL.charAt(baseURL.length() - 1) == '/'?(baseURL):(baseURL + '/');
-        API_ENDPOINT =  BASE_URL + "awb/api/" + AQConstants.API_VERSION + "/" + tenantCode + "/projects/" + projectCode;
+        API_ENDPOINT =  BASE_URL + "awb/api/" + AQConstants.API_VERSION + "/" + tenantCode;
     }
 
     private CloseableHttpClient getHttpsClient() {
@@ -140,21 +130,7 @@ public class AQRestClient {
         httpPut.addHeader("API_KEY", apiKey);
         httpPut.addHeader("USER_ID", userId);
         httpPut.addHeader("Content-Type", "application/json");
-        
-        if(runParam != null && !runParam.equals("")) {
-            JSONParser parser = new JSONParser();
-            JSONObject jsonObj = new JSONObject();
-            JSONObject json = (JSONObject) parser.parse(runParam);
-            jsonObj.put("jobPid", Integer.parseInt(jobId));
-            jsonObj.put("runProperties", json);
-            StringEntity requestEntity = new StringEntity(jsonObj.toJSONString(), org.apache.http.entity.ContentType.APPLICATION_JSON);
-            httpPut.setEntity(requestEntity);
-        } else {
-            JSONObject json = new JSONObject();
-            json.put("jobPid", Integer.parseInt(jobId));
-            StringEntity requestEntity = new StringEntity(json.toJSONString(), org.apache.http.entity.ContentType.APPLICATION_JSON);
-            httpPut.setEntity(requestEntity);
-        }
+        httpPut.setEntity(new AQUtils().getRunParam(jobId, runParam));
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
             BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -184,6 +160,7 @@ public class AQRestClient {
             httpClient.close();
         }
     }
+
     public String testConnection(String apiKey, String userId, String jobId, String runParam)
             throws ParseException, IOException {
         CloseableHttpClient httpClient = getHttpsClient();
@@ -192,28 +169,14 @@ public class AQRestClient {
         httpPost.addHeader("API_KEY", apiKey);
         httpPost.addHeader("USER_ID", userId);
         httpPost.addHeader("Content-Type", "application/json");
-        
-        if(runParam != null && !runParam.equals("")) {
-            // add it to list
-            JSONParser parser = new JSONParser();  
-            JSONObject json = (JSONObject) parser.parse(runParam);
-            json.put("jobPid", Integer.parseInt(jobId));
-            StringEntity requestEntity = new StringEntity(json.toJSONString(), org.apache.http.entity.ContentType.APPLICATION_JSON);
-            httpPost.setEntity(requestEntity);
-        } else {
-            JSONObject json = new JSONObject();
-            json.put("jobPid", Integer.parseInt(jobId));
-            StringEntity requestEntity = new StringEntity(json.toJSONString(), org.apache.http.entity.ContentType.APPLICATION_JSON);
-            httpPost.setEntity(requestEntity);
-        }
-
+        httpPost.setEntity(new AQUtils().getRunParam(jobId, runParam));
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
             if (httpResponse.getStatusLine().getStatusCode() == 200 || httpResponse.getStatusLine().getStatusCode() == 204) {
                 return "";
             }
             if(httpResponse.getStatusLine().getStatusCode() == 404) {
-                return "Connection request failed. Please check the URL, Project Code and Tenant Code.";
+                return "Connection request failed. Please check the URL and Tenant Code.";
             }
             if (httpResponse.getStatusLine().getStatusCode() == 401) {
                 // user id and api key is wrong
