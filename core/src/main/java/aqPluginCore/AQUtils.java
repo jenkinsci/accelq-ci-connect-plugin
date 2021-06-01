@@ -20,18 +20,24 @@ public class AQUtils {
     public String getRunParamJsonPayload(String runParamStr) {
         if(runParamStr == null || runParamStr.trim().length() == 0)
             return null;
-        JSONObject json = new JSONObject();
-        String[] splitOnAmp = runParamStr.split("&");
-        for(String split: splitOnAmp) {
-            String[] splitOnEquals = split.split("=");
-            if(splitOnEquals.length == 2) {
-                String key = splitOnEquals[0].trim(), value = splitOnEquals[1].trim();
-                if(!key.equals("") && !value.equals("")) {
-                    json.put(key, value);
+        try {
+          new JSONParser().parse(runParamStr);
+          return runParamStr;
+        }catch(Exception e) {
+            JSONObject json = new JSONObject();
+            String[] splitOnAmp = runParamStr.split("&");
+            for(String split: splitOnAmp) {
+                String[] splitOnEquals = split.split("=");
+                if(splitOnEquals.length == 2) {
+                    String key = splitOnEquals[0].trim(), value = splitOnEquals[1].trim();
+                    if(!key.equals("") && !value.equals("")) {
+                        json.put(key, value);
+                    }
                 }
             }
+            return json.toJSONString();
         }
-        return json.toJSONString();
+
     }
     public String getFormattedTime(long a, long b) {
         Date startDate = new Date(a);
