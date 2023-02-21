@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import aqPluginCore.*;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.verb.POST;
+import org.json.simple.parser.ParseException;
 
 
 public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
@@ -220,7 +221,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 }
             }
             run.setResult(Result.SUCCESS);
-        } catch (Exception e) {
+        } catch (ParseException e) {
             out.println(e);
             run.setResult(Result.FAILURE);
         } finally {
