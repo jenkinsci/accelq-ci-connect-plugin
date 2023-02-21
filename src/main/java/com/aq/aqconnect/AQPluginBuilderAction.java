@@ -13,7 +13,6 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
-import org.json.simple.parser.ParseException;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.json.simple.*;
@@ -37,11 +36,12 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     private String runParamStr;
     private String proxyHost;
     private String proxyPort;
+    private String stepFailureThreshold;
     private Boolean disableSSLCheck;
 
     @DataBoundConstructor
     public AQPluginBuilderAction(String jobId, Secret apiKey, String appURL, String runParamStr,
-            String tenantCode, String userName, String proxyHost, String proxyPort, Boolean disableSSLCheck) {
+            String tenantCode, String userName, String proxyHost, String proxyPort, String stepFailureThreshold, Boolean disableSSLCheck) {
         this.jobId = jobId;
         this.apiKey = apiKey;
         this.appURL = appURL;
@@ -50,6 +50,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         this.userName = userName;
         this.proxyPort = proxyPort;
         this.proxyHost = proxyHost;
+        this.stepFailureThreshold = stepFailureThreshold;
         this.disableSSLCheck = disableSSLCheck || false;
     }
 
@@ -82,6 +83,9 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
 
     public String getTenantCode() {
         return tenantCode;
+    }
+    public String getStepFailureThreshold() {
+        return stepFailureThreshold;
     }
     public Boolean getSSLChecks() {
         return disableSSLCheck;
@@ -134,6 +138,13 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             long passCount = 0, failCount = 0, runningCount = 0, totalCount = 0, notRunCount = 0;
             String jobStatus = "";
             int attempt = 0;
+            String threshold = this.stepFailureThreshold;
+            if (threshold == null || threshold.equals("")) {
+                threshold = "0";
+            }
+            boolean isDouble = threshold.indexOf(".") != -1;
+            int failureThreshold = isDouble ? Double.valueOf(threshold).intValue() : Integer.parseInt(threshold);
+
             String resultAccessURL = aqRestClient.getResultExternalAccessURL(Long.toString(realJobPid), this.tenantCode);
             do {
                 summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
@@ -158,7 +169,15 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                     }
                     out.println("Purpose: " + jobPurpose);
                     out.println("Total Test Cases: " + totalTestCases);
+                    out.println("Step Failure threshold: " + threshold);
                     out.println();
+                    if (isDouble) {
+                        out.println("Warning: Invalid value (" + threshold +") passed for Step Failure Threshold. Truncating the value to " + failureThreshold + " (Only integers between 0 and 100, and -1 are allowed).");
+                    }
+                    if (failureThreshold <= -2 || failureThreshold >= 101) {
+                        out.println("Warning: Ignoring the Step Failure threshold. Invalid value (" + failureThreshold + ") passed. Valid values are 0 to 100, or -1 to ignore threshold.");
+                        failureThreshold = 0;
+                    }
                     out.println("Results Link: " + resultAccessURL);
                     out.println("Need to abort? Click on the link above, login to ACCELQ and abort the run.");
                     out.println();
@@ -187,17 +206,28 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println("Results Link: " + resultAccessURL);
             out.println();
 
-            if (failCount > 0 || jobStatus.equals(AQConstants.TEST_JOB_STATUS.ABORTED.getStatus().toUpperCase())
+            double failCount_ = Long.valueOf(failCount).doubleValue();
+            double totalCount_ = Long.valueOf(totalCount).doubleValue();
+            int failedPercentage = (int) ((failCount_ / totalCount_) * 100);
+
+            if (jobStatus.equals(AQConstants.TEST_JOB_STATUS.ABORTED.getStatus().toUpperCase())
                     || jobStatus.equals(AQConstants.TEST_JOB_STATUS.FAILED.getStatus().toUpperCase())
                     || jobStatus.equals(AQConstants.TEST_JOB_STATUS.ERROR.getStatus().toUpperCase())) {
                 throw new AQException(AQConstants.LOG_DELIMITER + "Run Failed");
+            } else if(failCount > 0) {
+                if(failureThreshold != -1 && failedPercentage >= failureThreshold) {
+                    throw new AQException(AQConstants.LOG_DELIMITER + "Automation test step failed (test case failure count exceeds the threshold limit)");
+                }
             }
+            run.setResult(Result.SUCCESS);
+        } catch (Exception e) {
+            out.println(e);
+            run.setResult(Result.FAILURE);
+        } finally {
             out.println("**********************************************");
             out.println("*** Completed: ACCELQ Test Automation Step ***");
             out.println("**********************************************");
             out.println();
-        } catch (ParseException e) {
-            e.printStackTrace();
         }
     }
 
@@ -222,6 +252,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                                                @QueryParameter("runParamStr") final String runParamStr,
                                                @QueryParameter("proxyHost") final String proxyHost,
                                                @QueryParameter("proxyPort") final String proxyPort,
+                                               @QueryParameter("stepFailureThreshold") final String stepFailureThreshold,
                                                @QueryParameter("disableSSLCheck") final Boolean disableSSLCheck,
                                                @AncestorInPath Job job) throws IOException, ServletException {
 
@@ -272,6 +303,11 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 String payload = aqUtils.getRunParamJsonPayload(runParamStr);
                 aqRestClient.setUpBaseURL(appURL, tenantCode);
                 aqRestClient.disableSSLChecks(disableSSLCheck);
+                if (proxyHost != null && proxyPort != null && proxyHost.length() > 0 && proxyPort.length() > 0) {
+                    aqRestClient.setUpProxy(proxyHost.trim(), Integer.parseInt(proxyPort.trim()));
+                } else {
+                    aqRestClient.setUpProxy("", 0);
+                }
                 res = aqRestClient.testConnection(apiKey, userName, jobId, payload);
                 if (res == null) {
                     return FormValidation.error("Connection Error: Something in plugin went wrong");
