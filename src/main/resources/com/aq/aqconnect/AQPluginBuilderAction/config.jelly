@@ -33,5 +33,5 @@
     </f:entry>
     <f:validateButton
     title="Test Connection" progress="Testing..."
-    method="testConnection" with="appURL,apiKey,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort,disableSSLCheck"/>
+    method="testConnection" with="appURL,apiKey,jobId,tenantCode,runParamStr,userName,proxyHost,proxyPort,stepFailureThreshold,disableSSLCheck"/>
 </j:jelly>
