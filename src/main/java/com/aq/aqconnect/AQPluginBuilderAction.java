@@ -52,7 +52,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         this.proxyPort = proxyPort;
         this.proxyHost = proxyHost;
         this.stepFailureThreshold = stepFailureThreshold;
-        this.disableSSLCheck = disableSSLCheck || false;
+        this.disableSSLCheck = disableSSLCheck;
     }
 
     public Secret getApiKey() {
