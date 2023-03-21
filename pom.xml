@@ -24,7 +24,7 @@
   <description>ACCELQ Continuous Integration</description>
   <url>http://www.accelq.com</url>
   <scm>
-    <url>https://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@github.com/jenkinsci/accelq-ci-connect-plugin.git</url>
+    <url>https://github.com/jenkinsci/accelq-ci-connect-plugin</url>
     <connection>scm:git:https://github.com/jenkinsci/accelq-ci-connect-plugin.git</connection>
     <developerConnection>scm:git:https://github.com/jenkinsci/accelq-ci-connect-plugin.git</developerConnection>
     <tag>accelq-ci-connect-1.4</tag>
