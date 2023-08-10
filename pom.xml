@@ -10,7 +10,6 @@
   </parent>
     <groupId>com.aq</groupId>
     <artifactId>accelq-ci-connect</artifactId>
-    <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
 
   <properties>
