@@ -90,7 +90,6 @@ public class AQRestClient {
         } catch(Exception e) {
             return null;
         }
-        return null;
     }
 
     public JSONObject getJobSummary(long runPid, String apiKey, String userId) {
