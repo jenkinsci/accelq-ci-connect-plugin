@@ -30,7 +30,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:3.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.codehaus.mojo:animal-sniffer-annotations:1.14" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: javax.servlet:javax.servlet-api:3.1.0" level="project" />
+    <!-- <orderEntry type="library" scope="TEST" name="Maven: javax.servlet:javax.servlet-api:3.1.0" level="project" /> -->
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:servlet-api:2.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jenkins-ci.main:jenkins-core:1.625.3" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jenkins-ci.plugins.icon-shim:icon-set:1.0.5" level="project" />

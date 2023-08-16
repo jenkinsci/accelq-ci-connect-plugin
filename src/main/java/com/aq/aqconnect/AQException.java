@@ -1,4 +1,5 @@
-package aqPluginCore;
+package com.aq.aqconnect;
+
 
 public class AQException extends RuntimeException{
 

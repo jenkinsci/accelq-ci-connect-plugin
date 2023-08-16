@@ -1,4 +1,5 @@
-package aqPluginCore;
+package com.aq.aqconnect;
+
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -21,27 +22,25 @@ import javax.net.ssl.SSLContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 public class AQRestClient {
 
 
-    private static final AQRestClient aqRESTClient = new AQRestClient();
     private final JSONParser jsonParser = new JSONParser();
 
     //Base URL and extensions
-    private static String BASE_URL;
-    private static String API_ENDPOINT;
+    private String BASE_URL;
+    private String API_ENDPOINT;
+    private int PROXY_PORT = 80;
+    private String PROXY_HOST;
+    private Boolean DISABLE_SSL_CHECKS = false;
 
-    private static int PROXY_PORT = 80;
-    private static String PROXY_HOST;
-    private static Boolean DISABLE_SSL_CHECKS = false;
-
-
-    public static AQRestClient getInstance() {
-        return aqRESTClient;
-    }
 
     public String getBaseURL() {
         return BASE_URL;
@@ -60,7 +59,7 @@ public class AQRestClient {
         API_ENDPOINT =  BASE_URL + "awb/api/" + AQConstants.API_VERSION + "/" + tenantCode;
     }
 
-    private CloseableHttpClient getHttpsClient() {
+    private CloseableHttpClient getHttpsClient(){
         try {
             HttpClientBuilder hcb = null;
             if (DISABLE_SSL_CHECKS) {
@@ -85,7 +84,11 @@ public class AQRestClient {
             }
             CloseableHttpClient client = hcb.build();
             return client;
-        } catch(Exception e) {
+        }catch(NoSuchAlgorithmException e){
+            return null;
+        }catch(KeyStoreException e){
+            return null;
+        }catch(KeyManagementException e){
             return null;
         }
     }
@@ -102,7 +105,7 @@ public class AQRestClient {
             CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpResponse.getEntity().getContent()));
+                    httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
             String inputLine;
             StringBuffer response = new StringBuffer();
 
@@ -134,7 +137,7 @@ public class AQRestClient {
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
             BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpResponse.getEntity().getContent()));
+                    httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
             String inputLine;
             StringBuffer response = new StringBuffer();
             while ((inputLine = reader.readLine()) != null) {
