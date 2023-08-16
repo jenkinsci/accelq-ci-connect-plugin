@@ -104,7 +104,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         JSONObject summaryObj = null;
         long realJobPid = 0;
         try {
-            aqRestClient = AQRestClient.getInstance();
+            aqRestClient = new AQRestClient();
             AQUtils aqUtils = new AQUtils();
             aqRestClient.setUpBaseURL(this.appURL, this.tenantCode);
             aqRestClient.disableSSLChecks(this.disableSSLCheck);
@@ -299,7 +299,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 // make call to backend to validate it
                 AQRestClient aqRestClient = null;
                 AQUtils aqUtils = new AQUtils();
-                aqRestClient = AQRestClient.getInstance();
+                aqRestClient = new AQRestClient();
                 String payload = aqUtils.getRunParamJsonPayload(runParamStr);
                 aqRestClient.setUpBaseURL(appURL, tenantCode);
                 aqRestClient.disableSSLChecks(disableSSLCheck);

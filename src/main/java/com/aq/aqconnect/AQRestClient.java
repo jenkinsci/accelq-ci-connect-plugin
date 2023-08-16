@@ -29,21 +29,16 @@ import java.security.cert.X509Certificate;
 public class AQRestClient {
 
 
-    private static final AQRestClient aqRESTClient = new AQRestClient();
+    private final AQRestClient aqRESTClient = new AQRestClient();
     private final JSONParser jsonParser = new JSONParser();
 
     //Base URL and extensions
-    private static String BASE_URL;
-    private static String API_ENDPOINT;
+    private String BASE_URL;
+    private String API_ENDPOINT;
+    private int PROXY_PORT = 80;
+    private String PROXY_HOST;
+    private Boolean DISABLE_SSL_CHECKS = false;
 
-    private static int PROXY_PORT = 80;
-    private static String PROXY_HOST;
-    private static Boolean DISABLE_SSL_CHECKS = false;
-
-
-    public static AQRestClient getInstance() {
-        return aqRESTClient;
-    }
 
     public String getBaseURL() {
         return BASE_URL;
@@ -88,8 +83,8 @@ public class AQRestClient {
             CloseableHttpClient client = hcb.build();
             return client;
         } catch(Exception e) {
-            return null;
         }
+        return null;
     }
 
     public JSONObject getJobSummary(long runPid, String apiKey, String userId) {
