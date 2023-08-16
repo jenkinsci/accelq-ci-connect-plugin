@@ -1,4 +1,5 @@
-package aqPluginCore;
+package com.aq.aqconnect;
+
 import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

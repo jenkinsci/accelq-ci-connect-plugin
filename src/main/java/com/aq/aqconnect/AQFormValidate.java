@@ -1,4 +1,5 @@
-package aqPluginCore;
+package com.aq.aqconnect;
+
 
 import java.net.URL;
 import java.util.regex.Pattern;

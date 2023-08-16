@@ -1,4 +1,4 @@
-package aqPluginCore;
+package com.aq.aqconnect;
 
 public class AQConstants {
     public static final String LOG_DELIMITER = ">>> ";

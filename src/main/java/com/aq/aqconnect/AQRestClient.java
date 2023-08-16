@@ -1,4 +1,5 @@
-package aqPluginCore;
+package com.aq.aqconnect;
+
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
