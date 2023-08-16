@@ -23,13 +23,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 public class AQRestClient {
 
 
-    private final AQRestClient aqRESTClient = new AQRestClient();
     private final JSONParser jsonParser = new JSONParser();
 
     //Base URL and extensions
@@ -57,7 +59,7 @@ public class AQRestClient {
         API_ENDPOINT =  BASE_URL + "awb/api/" + AQConstants.API_VERSION + "/" + tenantCode;
     }
 
-    private CloseableHttpClient getHttpsClient() {
+    private CloseableHttpClient getHttpsClient(){
         try {
             HttpClientBuilder hcb = null;
             if (DISABLE_SSL_CHECKS) {
@@ -82,9 +84,13 @@ public class AQRestClient {
             }
             CloseableHttpClient client = hcb.build();
             return client;
-        } catch(Exception e) {
+        }catch(NoSuchAlgorithmException e){
+            return null;
+        }catch(KeyStoreException e){
+            return null;
+        }catch(KeyManagementException e){
+            return null;
         }
-        return null;
     }
 
     public JSONObject getJobSummary(long runPid, String apiKey, String userId) {
