@@ -89,6 +89,7 @@ public class AQRestClient {
         } catch(Exception e) {
             return null;
         }
+        return null;
     }
 
     public JSONObject getJobSummary(long runPid, String apiKey, String userId) {
@@ -103,7 +104,7 @@ public class AQRestClient {
             CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpResponse.getEntity().getContent()));
+                    httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
             String inputLine;
             StringBuffer response = new StringBuffer();
 
@@ -135,7 +136,7 @@ public class AQRestClient {
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
             BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpResponse.getEntity().getContent()));
+                    httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
             String inputLine;
             StringBuffer response = new StringBuffer();
             while ((inputLine = reader.readLine()) != null) {

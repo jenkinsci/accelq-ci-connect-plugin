@@ -45,7 +45,8 @@ public class AQFormValidate {
     }
     public String validateUserId(String value) {
         try {
-            String emailRegex = "^(([^<>()[\\]\\\\.,;:\\s@\\\"]+(\\.[^<>()[\\]\\\\.,;:\\s@\\\"]+)*)|(\\\".+\\\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$";
+            String emailRegex = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
+                    + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
             Pattern pat = Pattern.compile(emailRegex); 
             if (value == null || value.length() == 0) return "Cannot be empty";
             else if (!pat.matcher(value).matches()) return "User ID must be in email format";
