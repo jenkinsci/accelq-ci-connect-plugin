@@ -16,7 +16,7 @@ import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.json.simple.*;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -97,8 +97,8 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher,
-            @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    public void perform(@NonNull Run<?, ?> run, @NonNull FilePath workspace, @NonNull Launcher launcher,
+            @NonNull TaskListener listener) throws InterruptedException, IOException {
         PrintStream out = listener.getLogger();
         AQRestClient aqRestClient = null;
         JSONObject summaryObj = null;
