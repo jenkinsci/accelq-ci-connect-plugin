@@ -11,12 +11,12 @@
 
   <groupId>com.aq</groupId>
   <artifactId>accelq-ci-connect</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>${changelist}</version>
   <packaging>hpi</packaging>
 
   <properties>
     <revision>1.8</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/accelq-ci-connect-plugin</gitHubRepo>
     <gitHubRepo>jenkinsci/accelq-ci-connect-plugin</gitHubRepo>
     <jenkins.version>2.401.3</jenkins.version>
