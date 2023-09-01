@@ -187,6 +187,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                         out.println("Purpose: " + jobPurpose);
                         out.println("Total Test Cases: " + totalTestCases);
                         out.println("Step Failure threshold: " + threshold);
+                        out.println("Max Wait Time in Minutes: " + maxWaitTime);
                         out.println();
                         if (isDouble) {
                             out.println("Warning: Invalid value (" + threshold +") passed for Step Failure Threshold. Truncating the value to " + failureThreshold + " (Only integers between 0 and 100, and -1 are allowed).");
