@@ -2,6 +2,7 @@ package com.aq.aqconnect;
 
 
 import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -103,19 +104,26 @@ public class AQRestClient {
         httpGet.addHeader("Content-Type", "application/json");
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode >= 200 && statusCode <= 299) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = reader.readLine()) != null) {
-                response.append(inputLine);
+                while ((inputLine = reader.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                reader.close();
+                JSONObject summaryObj = (JSONObject) jsonParser.parse(response.toString());
+                httpClient.close();
+                return summaryObj;
+            } else {
+                JSONObject errorObj = new JSONObject();
+                errorObj.put("aq_statusCode", statusCode);
+                httpClient.close(); // Close the HttpClient here in the error case
+                return errorObj;
             }
-            reader.close();
-            JSONObject summaryObj = (JSONObject) jsonParser.parse(response.toString());
-            httpClient.close();
-            return summaryObj;
         } catch(IOException ioe) {
             ioe.printStackTrace();
             return null;

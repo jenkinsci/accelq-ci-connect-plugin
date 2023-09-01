@@ -1,5 +1,4 @@
 package com.aq.aqconnect;
-
 import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -75,5 +74,8 @@ public class AQUtils {
             res += " " + (difference_In_Seconds > Long.valueOf(1) ? (difference_In_Seconds + " seconds") : (difference_In_Seconds + " second"));
         }
         return res;
+    }
+    public boolean isWaitTimeExceeded(long start, int maxWait) {
+        return Math.floor((System.currentTimeMillis() - start) / (1000 * 60)) > maxWait;
     }
 }

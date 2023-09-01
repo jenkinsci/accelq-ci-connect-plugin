@@ -37,11 +37,12 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     private String proxyHost;
     private String proxyPort;
     private String stepFailureThreshold;
+    private String maxWaitTimeInMins;
     private Boolean disableSSLCheck;
 
     @DataBoundConstructor
     public AQPluginBuilderAction(String jobId, Secret apiKey, String appURL, String runParamStr,
-            String tenantCode, String userName, String proxyHost, String proxyPort, String stepFailureThreshold, Boolean disableSSLCheck) {
+            String tenantCode, String userName, String proxyHost, String proxyPort, String stepFailureThreshold, String maxWaitTimeInMins, Boolean disableSSLCheck) {
         this.jobId = jobId;
         this.apiKey = apiKey;
         this.appURL = appURL;
@@ -51,7 +52,8 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
         this.proxyPort = proxyPort;
         this.proxyHost = proxyHost;
         this.stepFailureThreshold = stepFailureThreshold;
-        this.disableSSLCheck = disableSSLCheck;
+        this.maxWaitTimeInMins = maxWaitTimeInMins;
+        this.disableSSLCheck = disableSSLCheck || false;
     }
 
     public Secret getApiKey() {
@@ -86,6 +88,9 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
     }
     public String getStepFailureThreshold() {
         return stepFailureThreshold;
+    }
+    public String getMaxWaitTimeInMins() {
+        return maxWaitTimeInMins;
     }
     public Boolean getSSLChecks() {
         return disableSSLCheck;
@@ -138,6 +143,8 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             long passCount = 0, failCount = 0, runningCount = 0, totalCount = 0, notRunCount = 0;
             String jobStatus = "";
             int attempt = 0;
+            final long startTime = System.currentTimeMillis();
+            int maxWaitTime = this.maxWaitTimeInMins == null || this.maxWaitTimeInMins.equals("") ? AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS : Integer.valueOf(this.maxWaitTimeInMins);
             String threshold = this.stepFailureThreshold;
             if (threshold == null || threshold.equals("")) {
                 threshold = "0";
@@ -146,57 +153,66 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             int failureThreshold = isDouble ? Double.valueOf(threshold).intValue() : Integer.parseInt(threshold);
 
             String resultAccessURL = aqRestClient.getResultExternalAccessURL(Long.toString(realJobPid), this.tenantCode);
+            boolean error = false;
             do {
+                
                 summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
-                if (summaryObj.get("cause") != null) {
-                    throw new AQException((String) summaryObj.get("cause"));
-                }
-                if (summaryObj.get("summary") != null) {
-                    summaryObj = (JSONObject) summaryObj.get("summary");
-                }
-                passCount = (Long) summaryObj.get("pass");
-                failCount = (Long) summaryObj.get("fail");
-                notRunCount = (Long) summaryObj.get("notRun");
-                if (attempt == 0) {
-                    String jobPurpose = (String) summaryObj.get("purpose");
-                    String scenarioName = (String) summaryObj.get("scnName");
-                    String testSuiteName = (String) summaryObj.get("testSuiteName");
-                    Long totalTestCases = (Long) summaryObj.get("testcaseCount");
-                    if (testSuiteName != null && testSuiteName.length() > 0) {
-                        out.println("Test Suite Name: " + testSuiteName);
-                    } else {
-                        out.println("Scenario Name: " + scenarioName);
-                    }
-                    out.println("Purpose: " + jobPurpose);
-                    out.println("Total Test Cases: " + totalTestCases);
-                    out.println("Step Failure threshold: " + threshold);
-                    out.println();
-                    if (isDouble) {
-                        out.println("Warning: Invalid value (" + threshold +") passed for Step Failure Threshold. Truncating the value to " + failureThreshold + " (Only integers between 0 and 100, and -1 are allowed).");
-                    }
-                    if (failureThreshold <= -2 || failureThreshold >= 101) {
-                        out.println("Warning: Ignoring the Step Failure threshold. Invalid value (" + failureThreshold + ") passed. Valid values are 0 to 100, or -1 to ignore threshold.");
-                        failureThreshold = 0;
-                    }
-                    out.println("Results Link: " + resultAccessURL);
-                    out.println("Need to abort? Click on the link above, login to ACCELQ and abort the run.");
-                    out.println();
-                }
-                jobStatus = ((String) summaryObj.get("status")).toUpperCase();
-                if (jobStatus.equals(AQConstants.TEST_JOB_STATUS.COMPLETED.getStatus().toUpperCase())) {
-                    res = " " + aqUtils.getFormattedTime((Long)summaryObj.get("startTimestamp"), (Long)summaryObj.get("completedTimestamp"));
-                    out.println("Status: " + summaryObj.get("status").toString().toUpperCase() + " ("+res.trim()+")");
+                if (summaryObj.containsKey("aq_statusCode")) {
+                    error = true;
+                    out.println("Warn: Issue fetching Job Summary, Status Code: " + summaryObj.get("aq_statusCode"));
                 } else {
-                    out.println("Status: " + summaryObj.get("status").toString().toUpperCase());
+                    error = false;
                 }
-                totalCount = passCount + failCount + notRunCount;
-                out.println("Total " + totalCount + ": "
-                        + "" + passCount +" Pass / " + failCount + " Fail");
-                out.println();
-                if (jobStatus.equals(AQConstants.TEST_JOB_STATUS.SCHEDULED.getStatus().toUpperCase()))
-                    ++attempt;
-                if (attempt == AQConstants.JOB_PICKUP_RETRY_COUNT) {
-                    throw new AQException("No agent available to pickup the job");
+
+                if (!error) {
+                    if (summaryObj.get("cause") != null) {
+                        throw new AQException((String) summaryObj.get("cause"));
+                    }
+                    if (summaryObj.get("summary") != null) {
+                        summaryObj = (JSONObject) summaryObj.get("summary");
+                    }
+                    passCount = (Long) summaryObj.get("pass");
+                    failCount = (Long) summaryObj.get("fail");
+                    notRunCount = (Long) summaryObj.get("notRun");
+                    if (attempt == 0) {
+                        String jobPurpose = (String) summaryObj.get("purpose");
+                        String scenarioName = (String) summaryObj.get("scnName");
+                        String testSuiteName = (String) summaryObj.get("testSuiteName");
+                        Long totalTestCases = (Long) summaryObj.get("testcaseCount");
+                        if (testSuiteName != null && testSuiteName.length() > 0) {
+                            out.println("Test Suite Name: " + testSuiteName);
+                        } else {
+                            out.println("Scenario Name: " + scenarioName);
+                        }
+                        out.println("Purpose: " + jobPurpose);
+                        out.println("Total Test Cases: " + totalTestCases);
+                        out.println("Step Failure threshold: " + threshold);
+                        out.println();
+                        if (isDouble) {
+                            out.println("Warning: Invalid value (" + threshold +") passed for Step Failure Threshold. Truncating the value to " + failureThreshold + " (Only integers between 0 and 100, and -1 are allowed).");
+                        }
+                        if (failureThreshold <= -2 || failureThreshold >= 101) {
+                            out.println("Warning: Ignoring the Step Failure threshold. Invalid value (" + failureThreshold + ") passed. Valid values are 0 to 100, or -1 to ignore threshold.");
+                            failureThreshold = 0;
+                        }
+                        out.println("Results Link: " + resultAccessURL);
+                        out.println("Need to abort? Click on the link above, login to ACCELQ and abort the run.");
+                        out.println();
+                    }
+                    jobStatus = ((String) summaryObj.get("status")).toUpperCase();
+                    if (jobStatus.equals(AQConstants.TEST_JOB_STATUS.COMPLETED.getStatus().toUpperCase())) {
+                        res = " " + aqUtils.getFormattedTime((Long)summaryObj.get("startTimestamp"), (Long)summaryObj.get("completedTimestamp"));
+                        out.println("Status: " + summaryObj.get("status").toString().toUpperCase() + " ("+res.trim()+")");
+                    } else {
+                        out.println("Status: " + summaryObj.get("status").toString().toUpperCase());
+                    }
+                    totalCount = passCount + failCount + notRunCount;
+                    out.println("Total " + totalCount + ": "
+                            + "" + passCount +" Pass / " + failCount + " Fail");
+                    out.println();
+                    if(jobStatus.equals(AQConstants.TEST_JOB_STATUS.SCHEDULED.getStatus().toUpperCase()) && aqUtils.isWaitTimeExceeded(startTime,maxWaitTime)) {
+                        throw new AQException("No agent available to pickup the job");
+                    }
                 }
                 Thread.sleep(AQConstants.JOB_STATUS_POLL_TIME);
             } while (!jobStatus.equals(AQConstants.TEST_JOB_STATUS.COMPLETED.getStatus().toUpperCase())
@@ -253,6 +269,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                                                @QueryParameter("proxyHost") final String proxyHost,
                                                @QueryParameter("proxyPort") final String proxyPort,
                                                @QueryParameter("stepFailureThreshold") final String stepFailureThreshold,
+                                               @QueryParameter("maxWaitTimeInMins") final String maxWaitTimeInMins,
                                                @QueryParameter("disableSSLCheck") final Boolean disableSSLCheck,
                                                @AncestorInPath Job job) throws IOException, ServletException {
 
