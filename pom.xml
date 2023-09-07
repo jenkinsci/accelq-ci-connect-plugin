@@ -24,7 +24,6 @@
   </properties>
 
   <name>ACCELQ CI-Connect Plugin</name>
-  <description>ACCELQ Continuous Integration</description>
   <url>http://www.accelq.com</url>
   <scm>
     <url>https://github.com/${gitHubRepo}</url>

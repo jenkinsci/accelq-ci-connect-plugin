@@ -28,7 +28,7 @@
     <f:entry title="Step Failure Threshold (optional)" field="stepFailureThreshold">
         <f:textbox />
     </f:entry>
-    <f:entry title="Max time to wait (minutes) for Agent availability (optional)" field="maxWaitTimeInMins">
+    <f:entry title="Max time to wait in minutes for Agent availability (optional)" field="maxWaitTimeInMins">
         <f:textbox />
     </f:entry>
     <f:entry title="Disable SSL Checks (optional)" field="disableSSLCheck">
