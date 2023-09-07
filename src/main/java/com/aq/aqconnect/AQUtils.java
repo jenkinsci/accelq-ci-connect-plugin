@@ -76,6 +76,6 @@ public class AQUtils {
         return res;
     }
     public boolean isWaitTimeExceeded(long start, int maxWait) {
-        return Math.floor((System.currentTimeMillis() - start) / (1000 * 60)) > maxWait;
+        return Math.floor((double)(System.currentTimeMillis() - start) / (1000 * 60)) > maxWait;
     }
 }

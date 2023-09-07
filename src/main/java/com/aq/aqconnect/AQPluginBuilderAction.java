@@ -144,7 +144,18 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             String jobStatus = "";
             int attempt = 0;
             final long startTime = System.currentTimeMillis();
-            int maxWaitTime = this.maxWaitTimeInMins == null || this.maxWaitTimeInMins.equals("") ? AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS : Integer.valueOf(this.maxWaitTimeInMins);
+            int maxWaitTime;
+            if (this.maxWaitTimeInMins == null || this.maxWaitTimeInMins.isEmpty()) {
+                maxWaitTime = AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS;
+            } else {
+                try {
+                    maxWaitTime = Integer.parseInt(this.maxWaitTimeInMins);
+                } catch (NumberFormatException e) {
+                    // Handle the case where maxWaitTimeInMins is not a valid integer
+                    // You can log an error or take appropriate action here
+                    maxWaitTime = AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS; // Assign a default value if needed
+                }
+            }
             String threshold = this.stepFailureThreshold;
             if (threshold == null || threshold.equals("")) {
                 threshold = "0";
