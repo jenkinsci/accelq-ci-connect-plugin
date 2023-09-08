@@ -130,8 +130,13 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             } else if(res.length() > 0) {
                 throw new AQException("Connection Error: " + res);
             }
-
-            JSONObject realJobObj = aqRestClient.triggerJob(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload);
+            int maxWaitTime = 0;
+            if (this.maxWaitTimeInMins == null || this.maxWaitTimeInMins.equals("")) {
+                maxWaitTime = AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS;
+            } else {
+                maxWaitTime = Integer.parseInt(this.maxWaitTimeInMins);
+            }
+            JSONObject realJobObj = aqRestClient.triggerJob(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload, maxWaitTime);
 
             if (realJobObj == null) {
                 throw new AQException("Unable to submit the Job, check plugin log stack");
@@ -144,12 +149,6 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             String jobStatus = "";
             int attempt = 0;
             final long startTime = System.currentTimeMillis();
-            int maxWaitTime = 0;
-            if (this.maxWaitTimeInMins == null || this.maxWaitTimeInMins.equals("")) {
-                maxWaitTime = AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS;
-            } else {
-                maxWaitTime = Integer.parseInt(this.maxWaitTimeInMins);
-            }
             String threshold = this.stepFailureThreshold;
             if (threshold == null || threshold.equals("")) {
                 threshold = "0";

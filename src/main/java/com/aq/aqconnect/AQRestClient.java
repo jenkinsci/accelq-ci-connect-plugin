@@ -133,10 +133,10 @@ public class AQRestClient {
         }
     }
 
-    public JSONObject triggerJob(String apiKey, String userId, String jobId, String runParam) throws IOException,
+    public JSONObject triggerJob(String apiKey, String userId, String jobId, String runParam, int maxWaitTime) throws IOException,
             ParseException {
         CloseableHttpClient httpClient = getHttpsClient();
-        HttpPut httpPut = new HttpPut(API_ENDPOINT + "/jobs/" + jobId + "/trigger-ci-job");
+        HttpPut httpPut = new HttpPut(API_ENDPOINT + "/jobs/" + jobId + "/trigger-ci-job?" + (maxWaitTime >= 0 ? ("expireJobAfterXMinutes=" + maxWaitTime) : ""));
         httpPut.addHeader("User-Agent", AQConstants.USER_AGENT);
         httpPut.addHeader("API_KEY", apiKey);
         httpPut.addHeader("USER_ID", userId);
