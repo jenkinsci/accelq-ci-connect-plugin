@@ -140,7 +140,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 throw new AQException((String)realJobObj.get("cause"));
             }
             realJobPid = (long) realJobObj.get("pid");
-            long passCount = 0, failCount = 0, runningCount = 0, totalCount = 0, notRunCount = 0;
+            long passCount = 0, failCount = 0, totalCount = 0, notRunCount = 0;
             String jobStatus = "";
             int attempt = 0;
             final long startTime = System.currentTimeMillis();
@@ -159,8 +159,8 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
 
             String resultAccessURL = aqRestClient.getResultExternalAccessURL(Long.toString(realJobPid), this.tenantCode);
             boolean error = false;
+            boolean hasLoggedLinks = false;
             do {
-                
                 summaryObj = aqRestClient.getJobSummary(realJobPid, this.apiKey.getPlainText(), this.userName);
                 if (summaryObj.containsKey("aq_statusCode")) {
                     error = true;
@@ -180,6 +180,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                     failCount = (Long) summaryObj.get("fail");
                     notRunCount = (Long) summaryObj.get("notRun");
                     if (attempt == 0) {
+                        attempt = 1;
                         String jobPurpose = (String) summaryObj.get("purpose");
                         String scenarioName = (String) summaryObj.get("scnName");
                         String testSuiteName = (String) summaryObj.get("testSuiteName");
@@ -201,23 +202,29 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                             out.println("Warning: Ignoring the Step Failure threshold. Invalid value (" + failureThreshold + ") passed. Valid values are 0 to 100, or -1 to ignore threshold.");
                             failureThreshold = 0;
                         }
+                    }
+                    jobStatus = ((String) summaryObj.get("status")).toUpperCase();
+                    if (!jobStatus.equals(AQConstants.TEST_JOB_STATUS.SCHEDULED.getStatus().toUpperCase()) && !hasLoggedLinks) {
+                        hasLoggedLinks = true;
                         out.println("Results Link: " + resultAccessURL);
                         out.println("Need to abort? Click on the link above, login to ACCELQ and abort the run.");
                         out.println();
                     }
-                    jobStatus = ((String) summaryObj.get("status")).toUpperCase();
                     if (jobStatus.equals(AQConstants.TEST_JOB_STATUS.COMPLETED.getStatus().toUpperCase())) {
                         res = " " + aqUtils.getFormattedTime((Long)summaryObj.get("startTimestamp"), (Long)summaryObj.get("completedTimestamp"));
                         out.println("Status: " + summaryObj.get("status").toString().toUpperCase() + " ("+res.trim()+")");
                     } else {
                         out.println("Status: " + summaryObj.get("status").toString().toUpperCase());
                     }
-                    totalCount = passCount + failCount + notRunCount;
-                    out.println("Total " + totalCount + ": "
-                            + "" + passCount +" Pass / " + failCount + " Fail");
-                    out.println();
+
+                    if (hasLoggedLinks) {
+                        totalCount = passCount + failCount + notRunCount;
+                        out.println("Total " + totalCount + ": "
+                                + "" + passCount +" Pass / " + failCount + " Fail");
+                        out.println();
+                    }
                     if(jobStatus.equals(AQConstants.TEST_JOB_STATUS.SCHEDULED.getStatus().toUpperCase()) && aqUtils.isWaitTimeExceeded(startTime,maxWaitTime)) {
-                        throw new AQException("No agent available to pickup the job");
+                        throw new AQException(AQConstants.LOG_DELIMITER + "No agent available to pickup the job");
                     }
                 }
                 Thread.sleep(AQConstants.JOB_STATUS_POLL_TIME);
