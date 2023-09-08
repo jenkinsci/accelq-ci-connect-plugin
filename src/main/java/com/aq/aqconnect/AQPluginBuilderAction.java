@@ -123,18 +123,18 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
             out.println("******************************************");
             out.println();
             String runParamJsonPayload = aqUtils.getRunParamJsonPayload(this.runParamStr);
-            // Test connection at runtime
-            String res = aqRestClient.testConnection(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload);
-            if (res == null) {
-                throw new AQException("Connection Error: Something in plugin went wrong");
-            } else if(res.length() > 0) {
-                throw new AQException("Connection Error: " + res);
-            }
             int maxWaitTime = 0;
             if (this.maxWaitTimeInMins == null || this.maxWaitTimeInMins.equals("")) {
                 maxWaitTime = AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS;
             } else {
                 maxWaitTime = Integer.parseInt(this.maxWaitTimeInMins);
+            }
+            // Test connection at runtime
+            String res = aqRestClient.testConnection(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload, maxWaitTime);
+            if (res == null) {
+                throw new AQException("Connection Error: Something in plugin went wrong");
+            } else if(res.length() > 0) {
+                throw new AQException("Connection Error: " + res);
             }
             JSONObject realJobObj = aqRestClient.triggerJob(this.apiKey.getPlainText(), this.userName, this.jobId, runParamJsonPayload, maxWaitTime);
 
@@ -325,6 +325,12 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 return FormValidation.error("ACCELQ CI Job ID: " + res);
             }
             try {
+                int maxWaitTime = 0;
+                if (maxWaitTimeInMins == null || maxWaitTimeInMins.equals("")) {
+                    maxWaitTime = AQConstants.JOB_PICKUP_RETRY_TIME_THRESHOLD_IN_MINS;
+                } else {
+                    maxWaitTime = Integer.parseInt(maxWaitTimeInMins);
+                }
                 // make call to backend to validate it
                 AQRestClient aqRestClient = null;
                 AQUtils aqUtils = new AQUtils();
@@ -337,7 +343,7 @@ public class AQPluginBuilderAction extends Recorder implements SimpleBuildStep {
                 } else {
                     aqRestClient.setUpProxy("", 0);
                 }
-                res = aqRestClient.testConnection(apiKey, userName, jobId, payload);
+                res = aqRestClient.testConnection(apiKey, userName, jobId, payload, maxWaitTime);
                 if (res == null) {
                     return FormValidation.error("Connection Error: Something in plugin went wrong");
                 } else if(res.length() > 0) {

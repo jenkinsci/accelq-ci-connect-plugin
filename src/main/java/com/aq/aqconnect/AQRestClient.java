@@ -136,12 +136,12 @@ public class AQRestClient {
     public JSONObject triggerJob(String apiKey, String userId, String jobId, String runParam, int maxWaitTime) throws IOException,
             ParseException {
         CloseableHttpClient httpClient = getHttpsClient();
-        HttpPut httpPut = new HttpPut(API_ENDPOINT + "/jobs/" + jobId + "/trigger-ci-job?" + (maxWaitTime >= 0 ? ("expireJobAfterXMinutes=" + maxWaitTime) : ""));
+        HttpPut httpPut = new HttpPut(API_ENDPOINT + "/jobs/" + jobId + "/trigger-ci-job");
         httpPut.addHeader("User-Agent", AQConstants.USER_AGENT);
         httpPut.addHeader("API_KEY", apiKey);
         httpPut.addHeader("USER_ID", userId);
         httpPut.addHeader("Content-Type", "application/json");
-        httpPut.setEntity(new AQUtils().getRunParam(jobId, runParam));
+        httpPut.setEntity(new AQUtils().getRunParam(jobId, runParam, maxWaitTime));
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
             BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -172,7 +172,7 @@ public class AQRestClient {
         }
     }
 
-    public String testConnection(String apiKey, String userId, String jobId, String runParam)
+    public String testConnection(String apiKey, String userId, String jobId, String runParam, int maxWaitTime)
             throws ParseException, IOException {
         CloseableHttpClient httpClient = getHttpsClient();
         HttpPost httpPost = new HttpPost(API_ENDPOINT + "/jobs/" + jobId + "/validate-ci-job");
@@ -180,7 +180,7 @@ public class AQRestClient {
         httpPost.addHeader("API_KEY", apiKey);
         httpPost.addHeader("USER_ID", userId);
         httpPost.addHeader("Content-Type", "application/json");
-        httpPost.setEntity(new AQUtils().getRunParam(jobId, runParam));
+        httpPost.setEntity(new AQUtils().getRunParam(jobId, runParam, maxWaitTime));
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
             if (httpResponse.getStatusLine().getStatusCode() == 200 || httpResponse.getStatusLine().getStatusCode() == 204) {
