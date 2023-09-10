@@ -1,5 +1,4 @@
 package com.aq.aqconnect;
-
 import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -9,12 +8,13 @@ import java.util.Date;
 
 
 public class AQUtils {
-    public StringEntity getRunParam(String jobId, String runParam) throws ParseException {
+    public StringEntity getRunParam(String jobId, String runParam, int expireTimeInMinutes) throws ParseException {
         JSONObject jsonObj = new JSONObject();
         if(runParam != null && !runParam.equals("")) {
             jsonObj.put("runProperties", (JSONObject) new JSONParser().parse(runParam));
         }
         jsonObj.put("jobPid", Integer.parseInt(jobId));
+        jsonObj.put("expireTimeInMinutes", expireTimeInMinutes);
         StringEntity requestEntity = new StringEntity(jsonObj.toJSONString(), org.apache.http.entity.ContentType.APPLICATION_JSON);
         return requestEntity;
     }
@@ -75,5 +75,8 @@ public class AQUtils {
             res += " " + (difference_In_Seconds > Long.valueOf(1) ? (difference_In_Seconds + " seconds") : (difference_In_Seconds + " second"));
         }
         return res;
+    }
+    public boolean isWaitTimeExceeded(long start, int maxWait) {
+        return Math.floor((double)(System.currentTimeMillis() - start) / (1000 * 60)) > maxWait;
     }
 }

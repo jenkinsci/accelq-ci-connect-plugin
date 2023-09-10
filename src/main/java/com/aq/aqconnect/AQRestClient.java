@@ -2,6 +2,7 @@ package com.aq.aqconnect;
 
 
 import org.apache.http.HttpHost;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -103,19 +104,26 @@ public class AQRestClient {
         httpGet.addHeader("Content-Type", "application/json");
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode >= 200 && statusCode <= 299) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(
+                        httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    httpResponse.getEntity().getContent(), StandardCharsets.UTF_8));
-            String inputLine;
-            StringBuffer response = new StringBuffer();
-
-            while ((inputLine = reader.readLine()) != null) {
-                response.append(inputLine);
+                while ((inputLine = reader.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                reader.close();
+                JSONObject summaryObj = (JSONObject) jsonParser.parse(response.toString());
+                httpClient.close();
+                return summaryObj;
+            } else {
+                JSONObject errorObj = new JSONObject();
+                errorObj.put("aq_statusCode", statusCode);
+                httpClient.close(); // Close the HttpClient here in the error case
+                return errorObj;
             }
-            reader.close();
-            JSONObject summaryObj = (JSONObject) jsonParser.parse(response.toString());
-            httpClient.close();
-            return summaryObj;
         } catch(IOException ioe) {
             ioe.printStackTrace();
             return null;
@@ -125,7 +133,7 @@ public class AQRestClient {
         }
     }
 
-    public JSONObject triggerJob(String apiKey, String userId, String jobId, String runParam) throws IOException,
+    public JSONObject triggerJob(String apiKey, String userId, String jobId, String runParam, int maxWaitTime) throws IOException,
             ParseException {
         CloseableHttpClient httpClient = getHttpsClient();
         HttpPut httpPut = new HttpPut(API_ENDPOINT + "/jobs/" + jobId + "/trigger-ci-job");
@@ -133,7 +141,7 @@ public class AQRestClient {
         httpPut.addHeader("API_KEY", apiKey);
         httpPut.addHeader("USER_ID", userId);
         httpPut.addHeader("Content-Type", "application/json");
-        httpPut.setEntity(new AQUtils().getRunParam(jobId, runParam));
+        httpPut.setEntity(new AQUtils().getRunParam(jobId, runParam, maxWaitTime));
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
             BufferedReader reader = new BufferedReader(new InputStreamReader(
@@ -164,7 +172,7 @@ public class AQRestClient {
         }
     }
 
-    public String testConnection(String apiKey, String userId, String jobId, String runParam)
+    public String testConnection(String apiKey, String userId, String jobId, String runParam, int maxWaitTime)
             throws ParseException, IOException {
         CloseableHttpClient httpClient = getHttpsClient();
         HttpPost httpPost = new HttpPost(API_ENDPOINT + "/jobs/" + jobId + "/validate-ci-job");
@@ -172,7 +180,7 @@ public class AQRestClient {
         httpPost.addHeader("API_KEY", apiKey);
         httpPost.addHeader("USER_ID", userId);
         httpPost.addHeader("Content-Type", "application/json");
-        httpPost.setEntity(new AQUtils().getRunParam(jobId, runParam));
+        httpPost.setEntity(new AQUtils().getRunParam(jobId, runParam, maxWaitTime));
         try {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
             if (httpResponse.getStatusLine().getStatusCode() == 200 || httpResponse.getStatusLine().getStatusCode() == 204) {
